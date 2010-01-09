@@ -1,13 +1,18 @@
-
-// Kris Zyp
-
-// this is based on the CommonJS spec for promises: 
+// this is a promise module for Node, based on the CommonJS spec for promises: 
 // http://wiki.commonjs.org/wiki/Promises
-
-// A typical usage:
-// A default Promise constructor can be used to create a self-resolving deferred/promise:
-// var Promise = require("promise").Promise;
-//    var promise = new Promise();
+// Promise are chainable, immutable (once resolved), cancelable, 
+// progress monitorable, can be used securely, time agnostic 
+// (work the same whether or not they have been already resolved),
+// and will propagate unhandled errors.
+//
+// Promises can still be used with the normal Node promise API:
+// var promise = process.Promise();
+// promise.addCallback(function(){ ... });
+// promise.emitSuccess("done");
+//
+// A default Promise constructor can be used to create a self-resolving 
+// deferred/promise using the CommonJS API.
+// var promise = new process.Promise();
 // asyncOperation(function(){
 //    Promise.resolve("succesful result");
 // });
