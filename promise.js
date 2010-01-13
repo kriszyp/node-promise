@@ -1,166 +1,110 @@
-// this is a promise implementation for Node, based on the CommonJS spec for promises: 
-// http://wiki.commonjs.org/wiki/Promises
-// Promise are chainable, immutable (once resolved), cancelable, 
-// progress monitorable, can be used securely, time agnostic 
-// (work the same whether or not they have been already resolved),
-// and will propagate unhandled errors.
-//
-// Promises can still be used with the normal Node promise API:
-// var promise = process.Promise();
-// promise.addCallback(function(){ ... });
-// promise.emitSuccess("done");
-//
-
-
-var Promise = function(){
-};
-
-function enqueue(func){
-  setTimeout(func);
+/**
+* Convenience functions for promises, primarily based on the ref_send API
+*/
+function perform(value, async, sync){
+    try{
+        if(value && typeof value.then === "function"){
+            value = async(value);
+        }
+        else{
+            value = sync(value);
+        }
+        if(value && typeof value.then === "function"){
+            return value;
+        }
+        var deferred = new process.Promise();
+        deferred.resolve(value);
+        return deferred.promise;
+    }catch(e){
+        var deferred = new process.Promise();
+        deferred.reject(e);
+        return deferred.promise;
+    }
+    
 }
-
-/** Dojo/NodeJS methods*/
-Promise.prototype.addCallback = function(callback){
-  return this.then(callback);
-};
-
-Promise.prototype.addErrback = function(errback){
-  return this.then(null, errback);
-};
-
-/*Dojo methods*/
-Promise.prototype.addBoth = function(callback){
-  return this.then(callback, callback);
-};
-
-Promise.prototype.addCallbacks = function(callback, errback){
-  return this.then(callback, errback);
-};
-
-/*NodeJS method*/
-Promise.prototype.wait = function(){
-  return process.Promise.wait(this);
-};
-
-Deferred.prototype = Promise.prototype;
-// process.Promise is a promise/deferred
-process.Promise = defer;
-
-// A deferred provides an API for creating and resolving a promise.
-function defer(){
-  return new Deferred();
-} 
-
-var contextHandler = defer.contextHandler = {};
-
-function Deferred(canceller, rejectImmediately){
-  var result, finished, isError, waiting = [], handled;
-  var promise = this.promise = new Promise();
-  var currentContextHandler = contextHandler.getHandler && contextHandler.getHandler();
-  
-  function notifyAll(value){
-    if(finished){
-      throw new Error("This deferred has already been resolved");        
-    }
-    result = value;
-    finished = true;
-    if(rejectImmediately && isError && waiting.length === 0){
-      throw result[0];
-    }
-    for(var i = 0; i < waiting.length; i++){
-      notify(waiting[i]);  
-    }
-  }
-  function notify(listener){
-    var func = (isError ? listener.error : listener.resolved);
-    if(func){
-      handled = true;
-      enqueue(function(){
-        if(currentContextHandler){
-          currentContextHandler.resume();
-        }
-        try{
-          var newResult = func.apply(null, result);
-          if(newResult && typeof newResult.then === "function"){
-            newResult.then(listener.deferred.resolve, listener.deferred.reject);
-            return;
-          }
-          listener.deferred.resolve(newResult);
-        }
-        catch(e){
-          listener.deferred.reject(e);
-        }
-        finally{
-          if(currentContextHandler){
-            currentContextHandler.suspend();
-          }
-        }
-      });
-    }
-    else{
-      listener.deferred[isError ? "reject" : "resolve"].apply(listener.deferred, result);
-    }
-  }
-  // calling resolve will resolve the promise
-  this.resolve = this.callback = this.emitSuccess = function(){
-    notifyAll(arguments);
-  };
-  
-  var reject = function(){
-    isError = true;
-    notifyAll(arguments);
-  };
-  
-  // calling error will indicate that the promise failed
-  this.reject = this.errback = this.emitError = rejectImmediately ? reject : function(error){
-    return enqueue(function(){
-      reject(error);
+/**
+ * Promise manager to make it easier to consume promises
+ */
+ 
+/**
+ * Registers an observer on a promise.
+ * @param value     promise or value to observe
+ * @param resolvedCallback function to be called with the resolved value
+ * @param rejectCallback  function to be called with the rejection reason
+ * @param progressCallback  function to be called when progress is made
+ * @return promise for the return value from the invoked callback
+ */
+exports.whenPromise = function(value, resolvedCallback, rejectCallback, progressCallback){
+    return perform(value, function(value){
+        return value.then(resolvedCallback, rejectCallback, progressCallback);
+    },
+    function(value){
+        return resolvedCallback(value);
     });
-  } 
-  // call progress to provide updates on the progress on the completion of the promise
-  this.progress = function(update){
-    for(var i = 0; i < waiting.length; i++){
-      var progress = waiting[i].progress;
-      progress && progress(update);  
-    }
-  }
-  // provide the implementation of the promise
-  this.then = promise.then = function(resolvedCallback, errorCallback, progressCallback){
-    var returnDeferred = new Deferred(promise.cancel, true);
-    var listener = {resolved: resolvedCallback, error: errorCallback, progress: progressCallback, deferred: returnDeferred}; 
-    if(finished){
-      notify(listener);
-    }
-    else{
-      waiting.push(listener);
-    }
-    return returnDeferred.promise;
-  };
-  
-  if(canceller){
-    this.cancel = promise.cancel = function(){
-      var error = canceller();
-      if(!(error instanceof Error)){
-        error = new Error(error);
-      }
-      reject(error);
-    }
-  }
 };
-/** Adapted from Node's original wait implementation */
-/* Poor Man's coroutines */
-var coroutineStack = [];
-
-function destack(promise) {
-  promise._blocking = false;
-
-  while (coroutineStack.length > 0 &&
-    !coroutineStack[coroutineStack.length-1]._blocking)
-  {
-  coroutineStack.pop();
-  process.unloop("one");
-  }
+/**
+ * Registers an observer on a promise.
+ * @param value     promise or value to observe
+ * @param resolvedCallback function to be called with the resolved value
+ * @param rejectCallback  function to be called with the rejection reason
+ * @param progressCallback  function to be called when progress is made
+ * @return promise for the return value from the invoked callback or the value if it
+ * is a non-promise value
+ */
+exports.when = function(value, resolvedCallback, rejectCallback, progressCallback){
+    if(value && typeof value.then === "function"){
+    	return exports.whenPromise(value, resolvedCallback, rejectCallback, progressCallback);
+    }
+    return resolvedCallback(value);
 };
+
+/**
+ * Gets the value of a property in a future turn.
+ * @param target    promise or value for target object
+ * @param property      name of property to get
+ * @return promise for the property value
+ */
+exports.get = function(target, property){
+    return perform(target, function(target){
+        return target.get(property);
+    },
+    function(target){
+        return target[property]
+    });
+};
+
+/**
+ * Invokes a method in a future turn.
+ * @param target    promise or value for target object
+ * @param methodName      name of method to invoke
+ * @param args      array of invocation arguments
+ * @return promise for the return value
+ */
+exports.post = function(target, methodName, args){
+    return perform(target, function(target){
+        return target.call(property, args);
+    },
+    function(target){
+        return target[methodName].apply(target, args);
+    });
+};
+
+/**
+ * Sets the value of a property in a future turn.
+ * @param target    promise or value for target object
+ * @param property      name of property to set
+ * @param value     new value of property
+ * @return promise for the return value
+ */
+exports.put = function(target, property, value){
+    return perform(target, function(target){
+        return target.put(property, value);
+    },
+    function(target){
+        return target[property] = value;
+    });
+};
+
 
 /**
  * Waits for the given promise to finish, blocking (and executing other events)
@@ -170,40 +114,30 @@ function destack(promise) {
  * @param target   promise or value to wait for.
  * @return the value of the promise;
  */
-process.Promise.wait = function(promise){
-  var ret;
-  var hadError = false;
+exports.wait = process.Promise.wait;
 
-  promise.then(function () {
-    if (arguments.length == 1) {
-      ret = arguments[0];
-    } else if (arguments.length > 1) {
-      ret = Array.prototype.slice.call(arguments);
-    }
-    destack(promise);
-  },function (arg) {
-
-    hadError = true;
-    ret = arg;
-    destack(promise);
-  });
-
-  coroutineStack.push(promise);
-  if (coroutineStack.length > 10) {
-    process.stdio.writeError("WARNING: promise.wait() is being called too often.\n");
-  }
-  promise._blocking = true;
-
-  process.loop();
-
-  process.assert(promise._blocking == false);
-
-  if (hadError) {
-    if (ret) {
-      throw ret;
-    } else {
-      throw new Error("Promise completed with error (No arguments given.)");
-    }
-  }
-  return ret;
+/**
+ * Takes an array of promises and returns a promise that that is fulfilled once all
+ * the promises in the array are fulfilled
+ * @param group  The array of promises
+ * @return the promise that is fulfilled when all the array is fulfilled
+ */
+exports.group = function(group){
+	var deferred = defer();
+	if(!(group instanceof Array)){
+		group = Array.prototype.slice.call(arguments);
+	}
+	var fulfilled, length = group.length;
+	var results = [];
+	group.forEach(function(promise, index){
+		exports.when(promise, function(value){
+			results[index] = value;
+			fulfilled++;
+			if(fulfilled === length){
+				deferred.resolve(results);
+			}
+		},
+		deferred.reject);
+	});
+	return deferred.promise;
 };
