@@ -17,13 +17,43 @@ exports.whenPromise = function(value, resolvedCallback, rejectCallback, progress
     var returnValue;
     if (value && (typeof value.addCallback === "function" || typeof value.then === "function")){
       if (typeof value.addCallback === "function"){
-        value.addCallback(function(value){
-          resolvedCallback(value);
+        var promise = new process.Promise();
+        value.addCallback(function (value) {
+          try {
+            if (resolvedCallback) {
+              exports.when(resolvedCallback(value), function(value) {
+                promise.emitSuccess(value);
+              },
+              function (error) {
+                promise.emitError(error);
+              });
+            }
+            promise.emitSuccess(value);
+          }
+          catch (error) {
+            promise.emitError(error);
+          }
         });
-        value.addErrback(rejectCallback);
-        var deferred = new process.Promise();
-        deferred.resolve(value);
-        return deferred.promise;
+        value.addErrback(function (error) {
+          try {
+            if (rejectCallback) {
+              exports.when(rejectCallback(error), function(value) {
+                promise.emitSuccess(value);
+              },
+              function (error) {
+                promise.emitError(error);
+              });
+            }
+            else {
+              promise.emitError(error);
+            }
+            
+          }
+          catch (error) {
+            promise.emitError(error);
+          }
+        });
+        return promise;
       }
       else {
         value = value.then(resolvedCallback, rejectCallback, progressCallback);
@@ -32,17 +62,17 @@ exports.whenPromise = function(value, resolvedCallback, rejectCallback, progress
     else{
       value = resolvedCallback(value);
     }
-    if(value && typeof value.then === "function"){
+    if(value && ((value instanceof process.Promise) || (typeof value.then === "funtion"))){
       return value;
     }
-    var deferred = new process.Promise();
-    deferred.resolve(value);
-    return deferred;
+    var promise = new process.Promise();
+    promise.emitSuccess(value);
+    return promise;
   }
   catch(e){
-    var deferred = new process.Promise();
-    deferred.reject(e);
-    return deferred.promise;
+    var promise = new process.Promise();
+    promise.emitError(e);
+    return promise;
   }
 };
 /**
@@ -71,7 +101,12 @@ exports.when = function(value, resolvedCallback, rejectCallback, progressCallbac
  * @param target   promise or value to wait for.
  * @return the value of the promise;
  */
-exports.wait = process.Promise.wait;
+exports.wait = function(target){
+  if (typeof target.wait === "function") {
+    return target.wait();
+  }
+  return target;
+};
 
 /**
  * Takes an array of promises and returns a promise that that is fulfilled once all
@@ -80,23 +115,23 @@ exports.wait = process.Promise.wait;
  * @return the promise that is fulfilled when all the array is fulfilled
  */
 exports.all = function(array){
-  var deferred = defer();
+  var resultsPromise = new process.Promise();
   if(!(array instanceof Array)){
     array = Array.prototype.slice.call(arguments);
   }
-  var fulfilled, length = array.length;
+  var fulfilled = 0, length = array.length;
   var results = [];
   array.forEach(function(promise, index){
-    exports.when(promise, function(value){
+    exports.when(promise, each, each);
+    function each(value){
       results[index] = value;
       fulfilled++;
       if(fulfilled === length){
-        deferred.resolve(results);
+        resultsPromise.emitSuccess(results);
       }
-    },
-    deferred.reject);
+    }
   });
-  return deferred.promise;
+  return resultsPromise;
 };
 
 /**
@@ -106,19 +141,24 @@ exports.all = function(array){
  * @return the promise that is fulfilled when all the array is fulfilled
  */
 exports.first = function(array){
-  var deferred = defer();
+  var resultsPromise = new process.Promise();
   if(!(array instanceof Array)){
     array = Array.prototype.slice.call(arguments);
   }
   var fulfilled;
   array.forEach(function(promise, index){
     exports.when(promise, function(value){
-      if (!done) {
+      if (!fulfilled) {
         fulfilled = true;
-        deferred.resolve(value);
+        resultsPromise.emitSuccess(value);
       }  
     },
-    deferred.reject);
+    function(error){
+      if (!fulfilled) {
+        fulfilled = true;
+        resultsPromise.emitError(error);
+      }  
+    });
   });
-  return deferred.promise;
+  return resultsPromise;
 };

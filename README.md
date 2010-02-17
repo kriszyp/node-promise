@@ -18,7 +18,7 @@ The workhorse function of this library is the "when" function, which provides a 
   function findLast(items){
      // return the last item
      return when(items, function(items){
-       return items[items.length];
+       return items[items.length - 1];
      });
   }
 
@@ -38,6 +38,5 @@ And we can also provide asynchronous promise:
   > promise.emitSuccess([2,4,6,8,10]);
   2
   10
-
 
 
