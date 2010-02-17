@@ -162,3 +162,17 @@ exports.first = function(array){
   });
   return resultsPromise;
 };
+
+/*
+ * This is unsecure compatibility adapter for deferred/promise pairs. 
+ * Currently the deferred's promise just points back at itself, but
+ * the APIs should be separated (producer/deferred side and consumer/
+ * promise side). TODO: Make this secure.
+ */
+exports.defer = function(){
+  var deferred = new process.Promise();
+  deferred.resolve = deferred.emitSuccess;
+  deferred.reject = deferred.emitError;
+  deferred.promise = deferred;
+  return deferred;
+};
