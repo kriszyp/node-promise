@@ -1,5 +1,6 @@
-Convenience functions for promises, much of this is taken from Tyler Close's ref_send and Kris Kowal's work on promises. 
-Dual licensed under BSD and AFL.
+Convenience functions for promises, much of this is adapted from Tyler Close's ref_send and Kris Kowal's work on promises. 
+
+MIT License.
 
 The workhorse function of this library is the "when" function, which provides a means for normalizing interaction with values and functions that may be a normal synchronous value, or may be a promise (asynchronously fulfilled). The when() function takes a value that may be a promise or a normal value for the first function, and when the value is ready executes the function provided as the second argument (immediately in the case of a non-promise normal value). The value returned from when() is the result of the execution of the provided function, and returns a promise if provided a promise or synchronously returns a normal value if provided a non-promise value. This makes it easy to "chain" computations together. This allows us to write code that is agnostic to sync/async interfaces:
 

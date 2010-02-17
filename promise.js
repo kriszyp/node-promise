@@ -1,7 +1,7 @@
 /**
 * Convenience functions for promises, much of this is taken from Tyler Close's ref_send 
 * and Kris Kowal's work on promises.
-* Dual licensed under BSD and AFL
+* MIT License
 */
  
 /**
