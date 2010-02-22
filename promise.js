@@ -311,6 +311,34 @@ exports.when = function(value, resolvedCallback, rejectCallback, progressCallbac
 };
 
 /**
+ * Runs a function that takes a callback, but returns a Promise instead.
+ * @param func   node compatible async function which takes a callback as its last argument
+ * @return promise for the return value from the callback from the function
+ */
+exports.execute = function(asyncFunction){
+  var args = Array.prototype.slice.call(arguments, 1);
+
+  var deferred = new Deferred();
+  args.push(function(error, result){
+    if(error) {
+      deferred.emitError(error);
+    }
+    else {
+      if(arguments.length > 2){
+        // if there are multiple success values, we return an array
+        Array.prototype.shift.call(arguments, 1);
+        deferred.emitSuccess(arguments);
+      }
+      else{
+        deferred.emitSuccess(result);
+      }
+    }
+  });
+  asyncFunction.apply(this, args);
+  return deferred.promise;
+};
+
+/**
  * Gets the value of a property in a future turn.
  * @param target  promise or value for target object
  * @param property    name of property to get
@@ -491,26 +519,9 @@ if(typeof setTimeout !== "undefined") {
 }
 
 exports.convertNodeAsyncFunction = function(asyncFunction){
-  var arity = asyncFunction.length;
   return function(){
-    var deferred = new Deferred();
-    arguments.length = arity;
-    arguments[arity - 1] = function(error, result){
-      if(error) {
-        deferred.emitError(error);
-      }
-      else {
-        if(arguments.length > 2){
-          // if there are multiple success values, we return an array
-          Array.prototype.shift.call(arguments, 1);
-          deferred.emitSuccess(arguments);
-        }
-        else{
-          deferred.emitSuccess(result);
-        }
-      }
-    };
-    asyncFunction.apply(this, arguments);
-    return deferred.promise;
+    var args = Array.prototype.slice.call(arguments, 0);
+    args.unshift(asyncFunction);
+    exports.execute.call(null, args);
   };
 };
