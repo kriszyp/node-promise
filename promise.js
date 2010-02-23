@@ -49,7 +49,7 @@ catch(e){
   // squelch the error, and only complain if the queue is needed
 }
 if(!enqueue){
-  enqueue = function(func){
+  enqueue = (typeof process !== "undefined" && process.nextTick) || function(func){
     func();
   }
 }  
