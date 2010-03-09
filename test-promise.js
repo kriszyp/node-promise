@@ -3,7 +3,7 @@ var fs = require('./fs-promise');
 
 // open a file and read it
 fs.open("fs-promise.js", process.O_RDONLY).then(function(fd){
-  return fs.read(fd, 4096, null);
+  return fs.read(fd, 4096);
 }).then(function(args){
   sys.puts(args[0]);
 });
