@@ -4,7 +4,10 @@ MIT License.
 The node-promise project provides a complete promise implementation (since
 Node's was removed), and provides a fs-promise module that wraps Node's
 fs module (which now uses callbacks), providing a promise-based
-interface for asynchronous file access. The node-promise module now
+interface for asynchronous file access. Promises provide a clean separation
+of concerns between asynchronous behavior and the interface so asynchronous
+functions can be called without callbacks, and callback interaction can be 
+done on the generic promise interface. The node-promise module now
 features a promise implementation with:
 
 * Chainable promises
