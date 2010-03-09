@@ -2,6 +2,68 @@ Convenience functions for promises, much of this is adapted from Tyler Close's r
 
 MIT License.
 
+A typical usage:
+A default Promise constructor can be used to create a self-resolving deferred/promise:
+
+    var Promise = require("promise").Promise;
+    var promise = new Promise();
+    asyncOperation(function(){
+      Promise.resolve("succesful result");
+    });
+    promise -> given to the consumer
+ 
+A consumer can use the promise
+
+   promise.then(function(result){
+       ... when the action is complete this is executed ...
+   },
+   function(error){
+        ... executed when the promise fails
+   });
+
+Alternately, a provider can create a deferred and resolve it when it completes an action. 
+The deferred object a promise object that provides a separation of consumer and producer to protect
+promises from being fulfilled by untrusted code.
+
+    var defer = require("promise").defer;
+    var deferred = defer();
+    asyncOperation(function(){
+      deferred.resolve("succesful result");
+    });
+    deferred.promise -> given to the consumer
+ 
+Another way that a consumer can use promises:
+
+    var when = require("promise").when;
+    when(promise,function(result){
+       ... when the action is complete this is executed ...
+    },
+    function(error){
+       ... executed when the promise fails
+    });
+
+More examples:
+
+    function printFirstAndList(itemsDeferred){
+      findFirst(itemsDeferred).then(sys.puts);
+      findLast(itemsDeferred).then(sys.puts);
+    }
+    function findFirst(itemsDeferred){
+      return itemsDeferred.then(function(items){
+        return items[0];
+      });
+    }
+    function findLast(itemsDeferred){
+      return itemsDeferred.then(function(items){
+        return items[items.length];
+      });
+    }
+
+And now you can do:
+
+    printFirstAndLast(someAsyncFunction());
+
+
 The workhorse function of this library is the "when" function, which provides a means for normalizing interaction with values and functions that may be a normal synchronous value, or may be a promise (asynchronously fulfilled). The when() function takes a value that may be a promise or a normal value for the first function, and when the value is ready executes the function provided as the second argument (immediately in the case of a non-promise normal value). The value returned from when() is the result of the execution of the provided function, and returns a promise if provided a promise or synchronously returns a normal value if provided a non-promise value. This makes it easy to "chain" computations together. This allows us to write code that is agnostic to sync/async interfaces:
 
     var when = require("promise").when;
