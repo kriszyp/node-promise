@@ -1,4 +1,3 @@
-Convenience functions for promises, much of this is adapted from Tyler Close's ref_send and Kris Kowal's work on promises. 
 
 MIT License.
 
@@ -28,6 +27,8 @@ promise (thank you Benjamin Thomas for providing this)
 
 And:
 * fs-promise module for promise-based access to file system
+
+Much of this is adapted from Tyler Close's ref_send and Kris Kowal's work on promises. 
 
 Some quick examples from test-promise.js:
 sys = require("sys");
