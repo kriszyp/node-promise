@@ -17,6 +17,7 @@ ocap situations)
 emitSuccess, and emitError should still behave as expected)
 
 Utility functions, including:
+
 * when() - Normalization of sync (normal values) and async (promises)
 * all() - Create a promise that accumulate multiple concurrent promises
 * first() - Find the first promise to be fulfilled in a group of promises
@@ -26,13 +27,14 @@ Utility functions, including:
 promise (thank you Benjamin Thomas for providing this)
 
 And:
+
 * fs-promise module for promise-based access to file system
 
 Much of this is adapted from Tyler Close's ref_send and Kris Kowal's work on promises. 
 
 Some quick examples from test-promise.js:
-sys = require("sys");
-var fs = require('./fs-promise');
+    sys = require("sys");
+    var fs = require('./fs-promise');
 
     // open a file and read it
     fs.open("fs-promise.js", process.O_RDONLY).then(function(fd){
@@ -53,14 +55,14 @@ A default Promise constructor can be used to create a self-resolving deferred/pr
     });
     promise -> given to the consumer
  
-A consumer can use the promise
+A consumer can use the promise:
 
-   promise.then(function(result){
+    promise.then(function(result){
        ... when the action is complete this is executed ...
-   },
-   function(error){
+    },
+    function(error){
         ... executed when the promise fails
-   });
+    });
 
 Alternately, a provider can create a deferred and resolve it when it completes an action. 
 The deferred object a promise object that provides a separation of consumer and producer to protect
