@@ -2,7 +2,47 @@ Convenience functions for promises, much of this is adapted from Tyler Close's r
 
 MIT License.
 
-A typical usage:
+The node-promise project provides a complete promise implementation (since
+Node's was removed), and provides a fs-promise module that wraps Node's
+fs module (which now uses callbacks), providing a promise-based
+interface for asynchronous file access. The node-promise module now
+features a promise implementation with:
+
+* Chainable promises
+* Promises throw errors if an error handler is not provided
+* CommonJS promise proposal [1] compliant
+* Immutable once fulfilled to reduce possible side-effects
+* Promises can be used securely (as separate resolver/promise pairs in
+ocap situations)
+* Backwards compatibility where possible (addCallback, addErrback,
+emitSuccess, and emitError should still behave as expected)
+
+Utility functions, including:
+* when() - Normalization of sync (normal values) and async (promises)
+* all() - Create a promise that accumulate multiple concurrent promises
+* first() - Find the first promise to be fulfilled in a group of promises
+* seq() - Sequentially execute a set of promise returning functions
+* delay() - Returns a promise that is fulfilled after a given amount of time
+* execute() - Executes a function that takes a callback and returns a
+promise (thank you Benjamin Thomas for providing this)
+
+And:
+* fs-promise module for promise-based access to file system
+
+Some quick examples from test-promise.js:
+sys = require("sys");
+var fs = require('./fs-promise');
+
+    // open a file and read it
+    fs.open("fs-promise.js", process.O_RDONLY).then(function(fd){
+      return fs.read(fd, 4096);
+    }).then(function(args){
+      sys.puts(args[0]); // print the contents of the file
+    });
+
+    // does the same thing
+    fs.readFile("fs-promise.js").addCallback(sys.puts);
+
 A default Promise constructor can be used to create a self-resolving deferred/promise:
 
     var Promise = require("promise").Promise;
