@@ -409,16 +409,19 @@ exports.all = function(array){
   }
   var fulfilled = 0, length = array.length;
   var results = [];
-  array.forEach(function(promise, index){
-    exports.when(promise, each, each);
-    function each(value){
-      results[index] = value;
-      fulfilled++;
-      if(fulfilled === length){
-        deferred.resolve(results);
+  if (length === 0) deferred.resolve(results);
+  else {
+    array.forEach(function(promise, index){
+      exports.when(promise, each, each);
+      function each(value){
+        results[index] = value;
+        fulfilled++;
+        if(fulfilled === length){
+          deferred.resolve(results);
+        }
       }
-    }
-  });
+    });
+  }
   return deferred.promise;
 };
 
