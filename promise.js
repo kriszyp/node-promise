@@ -53,7 +53,8 @@ if(!enqueue){
     func();
   }
 }  
-var freeze = Object.freeze || function(){};
+// commented out due to: http://code.google.com/p/v8/issues/detail?id=851
+var freeze = /*Object.freeze || */function(){};
 
 /**
  * Default constructor that creates a self-resolving Promise. Not all promise implementations
