@@ -1,14 +1,12 @@
 
 MIT License.
 
-The node-promise project provides a complete promise implementation (since
-Node's was removed), and provides a fs-promise module that wraps Node's
-fs module (which now uses callbacks), providing a promise-based
-interface for asynchronous file access. Promises provide a clean separation
+The node-promise project provides a complete promise implementation. Promises provide a clean separation
 of concerns between asynchronous behavior and the interface so asynchronous
 functions can be called without callbacks, and callback interaction can be 
-done on the generic promise interface. The node-promise module now
-features a promise implementation with:
+done on the generic promise interface. The node-promise package provides just a promise implementation, however, https://github.com/kriszyp/promised-io is recommended for more complete promise-based IO functionality. The promised-io includes the promise implementation from node-promise, as well as wrappers around Node's filesystem and other system I/O APIs for consistent promise-based interaction.
+
+The node-promise module features a promise implementation with:
 
 * Chainable promises
 * Promises throw errors if an error handler is not provided
@@ -29,13 +27,9 @@ Utility functions, including:
 * execute() - Executes a function that takes a callback and returns a
 promise (thank you Benjamin Thomas for providing this)
 
-And:
-
-* fs-promise module for promise-based access to file system
-
 Much of this is adapted from Tyler Close's ref_send and Kris Kowal's work on promises. 
 
-Some quick examples from test-promise.js:
+Some quick examples from test-promise.js (again, it is recommended that you use http://github.com/kriszyp/promised-io for file and other I/O interaction):
     sys = require("sys");
     var fs = require('./fs-promise');
 
