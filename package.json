@@ -1,7 +1,7 @@
 {
 	"name":	"promise",
 	"description": "Kris Zyp's implementation of promises with added features, maintained as an npm package.",
-	"version": "0.5.1-unstable",
+	"version": "0.5.1-unstable-1",
 	"homepage": "https://github.com/MaxMotovilov/node-promise",
 	"files": [ "package.json", "promise.js", "fs-promise.js" ],
 	"main": "promise.js",
