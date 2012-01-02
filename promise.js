@@ -412,7 +412,7 @@ function composeAll(fail_on_error) {
 			array = Array.prototype.slice.call(arguments);
 		else
 			array = array.slice();
-		var todo = array.reduce( function(count,p){ return count+(p.then?1:0); }, 0 );
+		var todo = array.reduce( function(count,p){ return count+(p&&p.then?1:0); }, 0 );
 		if( todo === 0 )	
 			deferred.resolve(array);
 		else
