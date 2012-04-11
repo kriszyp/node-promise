@@ -417,7 +417,8 @@ function composeAll(fail_on_error) {
 			deferred.resolve(array);
 		else
 			array.forEach( function( p, i ) {
-				exports.when( p, succeed, fail_on_error ? fail : succeed );
+				if( p && p.then )
+					exports.when( p, succeed, fail_on_error ? fail : succeed );
 
 				function succeed( v ) {
 					array[i] = v;
