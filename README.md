@@ -30,18 +30,18 @@ promise (thank you Benjamin Thomas for providing this)
 Much of this is adapted from Tyler Close's ref_send and Kris Kowal's work on promises. 
 
 Some quick examples from test-promise.js (again, it is recommended that you use http://github.com/kriszyp/promised-io for file and other I/O interaction):
-    sys = require("sys");
+    util = require('util');
     var fs = require('./fs-promise');
 
     // open a file and read it
     fs.open("fs-promise.js", process.O_RDONLY).then(function(fd){
       return fs.read(fd, 4096);
     }).then(function(args){
-      sys.puts(args[0]); // print the contents of the file
+      util.puts(args[0]); // print the contents of the file
     });
 
     // does the same thing
-    fs.readFile("fs-promise.js").addCallback(sys.puts);
+    fs.readFile("fs-promise.js").addCallback(util.puts);
 
 A default Promise constructor can be used to create a self-resolving deferred/promise:
 
@@ -85,8 +85,8 @@ Another way that a consumer can use promises:
 More examples:
 
     function printFirstAndList(itemsDeferred){
-      findFirst(itemsDeferred).then(sys.puts);
-      findLast(itemsDeferred).then(sys.puts);
+      findFirst(itemsDeferred).then(util.puts);
+      findLast(itemsDeferred).then(util.puts);
     }
     function findFirst(itemsDeferred){
       return itemsDeferred.then(function(items){
@@ -109,8 +109,8 @@ The workhorse function of this library is the "when" function, which provides a 
     var when = require("promise").when;
     function printFirstAndLast(items){
       // print the first and last item
-      when(findFirst(items), sys.puts);
-      when(findLast(items), sys.puts);
+      when(findFirst(items), util.puts);
+      when(findLast(items), util.puts);
     }
     function findFirst(items){
        // return the first item
