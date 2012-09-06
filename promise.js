@@ -407,7 +407,9 @@ exports.wait = function(target){
 
 function composeAll(fail_on_error) {
 	return function(array) {
-		var deferred = new Deferred();
+		var deferred = new Deferred(),
+			once = true;
+
 		if( !(array instanceof Array) )
 			array = Array.prototype.slice.call(arguments);
 		else
@@ -418,7 +420,7 @@ function composeAll(fail_on_error) {
 		else
 			array.forEach( function( p, i ) {
 				if( p && p.then )
-					exports.when( p, succeed, fail_on_error ? fail : succeed );
+					exports.when( p, succeed, fail_on_error ? failOnce : succeed );
 
 				function succeed( v ) {
 					array[i] = v;
@@ -427,11 +429,14 @@ function composeAll(fail_on_error) {
 				}
 			} );
 
-		function fail( err ) {
-			array.forEach( function(p) {
-				if( p.then && p.cancel )	p.cancel();
-			} );
-			deferred.reject( err );
+		function failOnce( err ) {
+			if( once ) {
+				array.forEach( function(p) {
+					if( p.then && p.cancel )	p.cancel();
+				} );
+				deferred.reject( err );
+				once = false;
+			}
 		}
 
 		return deferred.promise;
