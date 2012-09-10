@@ -1,4 +1,3 @@
-
 MIT License.
 
 The node-promise project provides a complete promise implementation. Promises provide a clean separation
@@ -20,7 +19,8 @@ emitSuccess, and emitError should still behave as expected)
 Utility functions, including:
 
 * when() - Normalization of sync (normal values) and async (promises)
-* all() - Create a promise that accumulate multiple concurrent promises
+* all() - Create a promise that accumulate multiple concurrent promises (failed promises resolve to Error objects)
+* allOrNon() - Ditto, but any of the
 * first() - Find the first promise to be fulfilled in a group of promises
 * seq() - Sequentially execute a set of promise returning functions
 * delay() - Returns a promise that is fulfilled after a given amount of time
