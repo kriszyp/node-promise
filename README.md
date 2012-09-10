@@ -20,7 +20,7 @@ Utility functions, including:
 
 * when() - Normalization of sync (normal values) and async (promises)
 * all() - Create a promise that accumulate multiple concurrent promises (failed promises resolve to Error objects)
-* allOrNon() - Ditto, but any of the
+* allOrNone() - Ditto, but the first promise to fail causes the composition to fail as well
 * first() - Find the first promise to be fulfilled in a group of promises
 * seq() - Sequentially execute a set of promise returning functions
 * delay() - Returns a promise that is fulfilled after a given amount of time
