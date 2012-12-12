@@ -123,6 +123,20 @@ Promise.prototype.wait = function(){
   return exports.wait(this);
 };
 
+/**
+ * When promise is resolved or rejected, call a single callback in the style of Node callbacks
+ *
+ * @param {Function} nodeCallback		The callback function (e.g. function(err, result))
+ * @param {*=} opt_scope				Optional scope to set in the callback (default: null)
+ * @return {*}
+ */
+Promise.prototype.thenNode = function(nodeCallback, opt_scope) {
+	return this.then(
+		nodeCallback.bind(opt_scope ? opt_scope : null, null), // no err
+		nodeCallback.bind(opt_scope ? opt_scope : null) // err is first param
+	);
+};
+
 Deferred.prototype = Promise.prototype;
 // A deferred provides an API for creating and resolving a promise.
 exports.Promise = exports.Deferred = exports.defer = defer;
