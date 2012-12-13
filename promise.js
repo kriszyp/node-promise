@@ -1,5 +1,6 @@
 
 // Kris Zyp
+// Updates/added features by ...Max... (Max Motovilov)
 
 // this is based on the CommonJS spec for promises: 
 // http://wiki.commonjs.org/wiki/Promises
@@ -120,6 +121,20 @@ Promise.prototype.addCallbacks = function(callback, errback){
 /*NodeJS method*/
 Promise.prototype.wait = function(){
   return exports.wait(this);
+};
+
+/**
+ * When promise is resolved or rejected, call a single callback in the style of Node callbacks
+ *
+ * @param {Function} nodeCallback		The callback function (e.g. function(err, result))
+ * @param {*=} opt_scope				Optional scope to set in the callback (default: null)
+ * @return {*}
+ */
+Promise.prototype.thenNode = function(nodeCallback, opt_scope) {
+	return this.then(
+		nodeCallback.bind(opt_scope ? opt_scope : null, null), // no err
+		nodeCallback.bind(opt_scope ? opt_scope : null) // err is first param
+	);
 };
 
 Deferred.prototype = Promise.prototype;
@@ -403,28 +418,51 @@ exports.wait = function(target){
  * @param array  The array of promises
  * @return the promise that is fulfilled when all the array is fulfilled, resolved to the array of results
  */
-exports.all = function(array){
-  var deferred = new Deferred();
-  if(!(array instanceof Array)){
-    array = Array.prototype.slice.call(arguments);
-  }
-  var fulfilled = 0, length = array.length;
-  var results = [];
-  if (length === 0) deferred.resolve(results);
-  else {
-    array.forEach(function(promise, index){
-      exports.when(promise, each, each);
-      function each(value){
-        results[index] = value;
-        fulfilled++;
-        if(fulfilled === length){
-          deferred.resolve(results);
-        }
-      }
-    });
-  }
-  return deferred.promise;
-};
+
+function composeAll(fail_on_error) {
+	return function(array) {
+		var deferred = new Deferred(),
+			once = true;
+
+		if( !(array instanceof Array) )
+			array = Array.prototype.slice.call(arguments);
+		else
+			array = array.slice();
+		var todo = array.reduce( function(count,p){ return count+(p&&p.then?1:0); }, 0 );
+		if( todo === 0 )	
+			deferred.resolve(array);
+		else
+			array.forEach( function( p, i ) {
+				if( p && p.then )
+					exports.when( p, succeed, fail_on_error ? failOnce : succeed );
+
+				function succeed( v ) {
+					array[i] = v;
+					if( --todo === 0 )	
+						deferred.resolve(array);
+				}
+			} );
+
+		function failOnce( err ) {
+			if( once ) {
+				array.forEach( function(p) {
+					if( p.then && p.cancel )	p.cancel();
+				} );
+				deferred.reject( err );
+				once = false;
+			}
+		}
+
+		return deferred.promise;
+	}
+}
+
+exports.all = composeAll(false);
+
+/**
+ * Variation of all() -- fails if any of the promises fail
+ */
+exports.allOrNone = composeAll(true);
 
 /**
  * Takes an array of promises and returns a promise that is fulfilled when the first 
