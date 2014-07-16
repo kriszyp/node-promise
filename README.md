@@ -48,7 +48,7 @@ A default Promise constructor can be used to create a self-resolving deferred/pr
     var Promise = require("promise").Promise;
     var promise = new Promise();
     asyncOperation(function(){
-      Promise.resolve("succesful result");
+      Promise.resolve("successful result");
     });
     promise -> given to the consumer
  
