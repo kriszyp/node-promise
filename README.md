@@ -1,4 +1,4 @@
-MIT License.
+This package is deprecated, as the Node now provides this functionality itself. This package exists only for historical purposes.
 
 The node-promise project provides a complete promise implementation. Promises provide a clean separation
 of concerns between asynchronous behavior and the interface so asynchronous
